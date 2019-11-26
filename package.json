@@ -1,0 +1,14 @@
+{
+  "name": "texttospeech",
+  "version": "1.0.0",
+  "description": "texttospeech",
+  "main": "index.html",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Marco Pietersma",
+  "license": "UNLICENCED",
+  "dependencies": {
+    "jquery": "^3.4.1"
+  }
+}
