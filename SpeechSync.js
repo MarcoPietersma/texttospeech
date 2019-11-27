@@ -77,8 +77,7 @@ async function TextToSpeech(token, text) {
     audioCtx.decodeAudioData(
       audioData,
       function(buffer) {
-        myBuffer = buffer;
-        duration = buffer.duration;
+        var myBuffer = buffer;
         source.buffer = myBuffer;
         source.connect(audioCtx.destination);
         source.loop = false;
