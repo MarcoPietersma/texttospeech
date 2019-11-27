@@ -1,3 +1,5 @@
+<!-- @format -->
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -62,6 +64,10 @@
       var language = "nl-NL-HannaRUS";
       var audioCtx = context;
 
+      context.resume().then(() => {
+        console.log("Playback resumed successfully");
+      });
+
       var ssmlRequest = `
     <speak version='1.0' xml:lang='en-US'>
     <voice xml:lang='en-US' xml:gender='Female' name='en-US-JessaRUS'>
@@ -98,7 +104,9 @@
             duration = buffer.duration;
             source.buffer = myBuffer;
             source.connect(audioCtx.destination);
-            source.loop = true;
+            source.loop = false;
+
+            source.start(0);
           },
 
           function(e) {
