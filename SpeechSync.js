@@ -37,7 +37,7 @@ async function FetchToken() {
   return returnValue;
 }
 
-async function TextToSpeech(token, text, audioElement) {
+async function TextToSpeech(token, text) {
   var language = "nl-NL-HannaRUS";
   var audioCtx = context;
 
