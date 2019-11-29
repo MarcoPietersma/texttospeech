@@ -1,119 +1,313 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=700, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>TextToSpeech</title>
+<!doctype html>
+<!--[if lt IE 7 ]> <html lang="en" class="ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="en" class="ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="en" class="ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="en" class="ie9"> <![endif]-->
+<!--[if !IE]><!--> <html lang="en"> <!--<![endif]-->
+<head>
+<script type="text/javascript" src="lib/jquery.min.1.7.js"></script>
+<script type="text/javascript" src="lib/jquery-ui-1.8.20.custom.min.js"></script>
+<script type="text/javascript" src="lib/jquery.mousewheel.min.js"></script>
+<script type="text/javascript" src="lib/modernizr.2.5.3.min.js"></script>
+<script type="text/javascript" src="lib/hash.js"></script>
+<script>
+ 
+		/*
+			Deze functie word gebruikt om naar de volgende pagina te gaan
+		*/
+	 
+		function nextPage() {
+			let splitArray = window.location.href.split("/");
+			let currentPage = parseInt(splitArray[splitArray.length-1]);
+			let nextPageIndex = currentPage+2;
+			window.location.href = "index.html#page/" + (nextPageIndex);
+	
 
-    <script src="node_modules\jquery\dist\jquery.js"></script>
-  </head>
-  <body>
-    <textarea id="textBlock"> </textarea>
+		}
+	   
+		/*
+			Deze functie word gebruikt om naar de vorige pagina te gaan
+		 */
+	 
+		function prevPage() {
+			let splitArray = window.location.href.split("/");
+			let currentPage = parseInt(splitArray[splitArray.length-1]);
+			let prevPageIndex = currentPage-2;
+			window.location.href = "index.html#page/" + (prevPageIndex);
+		}
+	 
+	</script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <button id="btnPlay" onclick="Pronounce();">play</button>
+</head>
+<body>
+	<div id="prev">
+		<button id="pbutton" onclick="prevPage()"><i class="fa fa-angle-left" style="font-size:72px"></i></button> <!-- Dit is de vorige pagina button -->
+	</div>
+		<div id="next">
+		<button id="nbutton" onclick="nextPage()"><i class="fa fa-angle-right" style="font-size:72px"></i></button> <!-- Dit is de volgende pagina button -->
+	</div>
+	<div id="begin">
+			
+			<a class="btn-bgn" href="index.html#page/1">Begin Van Het Boek!</a>
+			
+				</div>
+	
+	
 
-    <audio controls id="audioCtrlFedByByteArray">
-      <source src="" id="audioPlayer" type="audio/wav" />
-    </audio>
-  </body>
-  <script type="text/javascript">
-    window.onload = init;
-    var context; // Audio context
-    var source; // Audio buffer
-    var duration;
+<div id="canvas">
+	<div id="book-zoom">
+		<div class="sample-docs">
+			<div ignore="1" class="tabs"></div>
+			<div class="hard"></div>
+			<div class="hard"></div>
+			<div class="hard p29"></div>
+			<div class="hard p30"></div>
+		</div>
+	</div>
+	
+	</div>
 
-    function init() {
-      if (!window.AudioContext) {
-        if (!window.webkitAudioContext) {
-          alert(
-            "Your browser does not support any AudioContext and cannot play back this audio."
-          );
-          return;
-        }
-        window.AudioContext = window.webkitAudioContext;
-      }
+	<div id="slider-bar" class="turnjs-slider">
+		<div id="slider"></div>
+	</div>
+</div>
 
-      context = new AudioContext();
-    }
 
-    async function FetchToken() {
-      var returnValue;
 
-      await $.ajax({
-        url:
-          "https://westeurope.api.cognitive.microsoft.com/sts/v1.0/issuetoken",
-        type: "POST",
-        beforeSend: function(xhr) {
-          xhr.setRequestHeader(
-            "Ocp-Apim-Subscription-Key",
-            "9e0045d2987049da9e57903e7837eb5a"
-          );
-        },
-        success: function(data) {
-          returnValue = data;
-        }
-      });
 
-      return returnValue;
-    }
+<script type="text/javascript">
+function loadApp() {
 
-    async function TextToSpeech(token, text) {
-      var language = "nl-NL-HannaRUS";
-      var audioCtx = context;
+	var flipbook = $('.sample-docs');
 
-      var ssmlRequest = `
-    <speak version='1.0' xml:lang='en-US'>
-    <voice xml:lang='en-US' xml:gender='Female' name='en-US-JessaRUS'>
-            ${text}
-    </voice>
-    </speak>`;
+	// Check if the CSS was already loaded
+	
+	if (flipbook.width()==0 || flipbook.height()==0) {
+		setTimeout(loadApp, 10);
+		return;
+	}
 
-      var request = new XMLHttpRequest();
-      source = audioCtx.createBufferSource();
 
-      request.open(
-        "POST",
-        "https://westeurope.tts.speech.microsoft.com/cognitiveservices/v1"
-      );
+	// Mousewheel
 
-      var tokentoSend = "Bearer " + token;
+	$('#book-zoom').mousewheel(function(event, delta, deltaX, deltaY) {
 
-      request.setRequestHeader("Authorization", tokentoSend);
-      request.setRequestHeader(
-        "X-Microsoft-OutputFormat",
-        "audio-16khz-32kbitrate-mono-mp3"
-      );
-      request.setRequestHeader("contentType", "application/ssml+xml");
+		var data = $(this).data(),
+			step = 30,
+			flipbook = $('.sample-docs'),
+			actualPos = $('#slider').slider('value')*step;
 
-      request.responseType = "arraybuffer";
+		if (typeof(data.scrollX)==='undefined') {
+			data.scrollX = actualPos;
+			data.scrollPage = flipbook.turn('page');
+		}
 
-      request.onload = function() {
-        var audioData = request.response;
+		data.scrollX = Math.min($( "#slider" ).slider('option', 'max')*step,
+			Math.max(0, data.scrollX + deltaX));
 
-        audioCtx.decodeAudioData(
-          audioData,
-          function(buffer) {
-            myBuffer = buffer;
-            duration = buffer.duration;
-            source.buffer = myBuffer;
-            source.connect(audioCtx.destination);
-            source.loop = true;
-          },
+		var actualView = Math.round(data.scrollX/step),
+			page = Math.min(flipbook.turn('pages'), Math.max(1, actualView*2 - 2));
 
-          function(e) {
-            "Error with decoding audio data" + e.error;
-          }
-        );
-      };
+		if ($.inArray(data.scrollPage, flipbook.turn('view', page))==-1) {
+			data.scrollPage = page;
+			flipbook.turn('page', page);
+		}
 
-      request.send(ssmlRequest);
-    }
+		if (data.scrollTimer)
+			clearInterval(data.scrollTimer);
+		
+		data.scrollTimer = setTimeout(function(){
+			data.scrollX = undefined;
+			data.scrollPage = undefined;
+			data.scrollTimer = undefined;
+		}, 1000);
 
-    async function Pronounce() {
-      var authToken = await FetchToken();
-      console.log(authToken);
-      await TextToSpeech(authToken, $("#textBlock").val());
-    }
-  </script>
+	});
+
+	// Slider
+
+	$( "#slider" ).slider({
+		min: 1,
+		max: 100,
+
+		start: function(event, ui) {
+			if (!window._thumbPreview) {
+				_thumbPreview = $('<div />', {'class': 'thumbnail'}).html('<div></div>');
+				setPreview(ui.value);
+				_thumbPreview.appendTo($(ui.handle));
+			} else
+				setPreview(ui.value);
+
+			moveBar(false);
+		},
+
+		slide: function(event, ui) {
+			setPreview(ui.value);
+		},
+
+		stop: function() {
+			if (window._thumbPreview)
+				_thumbPreview.removeClass('show');
+			
+			$('.sample-docs').turn('page', Math.max(1, $(this).slider('value')*2 - 2));
+		}
+	});
+
+
+	// URIs
+	
+	Hash.on('^page\/([0-9]*)$', {
+		yep: function(path, parts) {
+			var page = parts[1];
+
+			if (page!==undefined) {
+				if ($('.sample-docs').turn('is'))
+					$('.sample-docs').turn('page', page);
+			}
+
+		},
+		nop: function(path) {
+
+			if ($('.sample-docs').turn('is'))
+				$('.sample-docs').turn('page', 1);
+		}
+	});
+
+	// Arrows
+
+	$(document).keydown(function(e){
+
+		var previous = 37, next = 39;
+
+		switch (e.keyCode) {
+			case previous:
+
+				$('.sample-docs').turn('previous');
+
+			break;
+			case next:
+				
+				$('.sample-docs').turn('next');
+
+			break;
+		}
+
+	});
+
+	// Create the flipbook
+
+	flipbook.turn({
+		elevation: 50,
+		acceleration: false,
+		gradients: true,
+		autoCenter: true,
+		duration: 1000,
+		pages: 30,
+		when: {
+
+		turning: function(e, page, view) {
+			
+			var book = $(this),
+			currentPage = book.turn('page'),
+			pages = book.turn('pages');
+				
+			if (currentPage>3 && currentPage<pages-3) {
+				if (page==1) {
+					book.turn('page', 2).turn('stop').turn('page', page);
+					e.preventDefault();
+					return;
+				} else if (page==pages) {
+					book.turn('page', pages-1).turn('stop').turn('page', page);
+					e.preventDefault();
+					return;
+				}
+			} else if (page>3 && page<pages-3) {
+				if (currentPage==1) {
+					book.turn('page', 2).turn('stop').turn('page', page);
+					e.preventDefault();
+					return;
+				} else if (currentPage==pages) {
+					book.turn('page', pages-1).turn('stop').turn('page', page);
+					e.preventDefault();
+					return;
+				}
+			}
+
+			Hash.go('page/'+page).update();
+
+			if (page==1 || page==pages)
+				$('.sample-docs .tabs').hide();
+			
+
+		},
+
+		turned: function(e, page, view) {
+
+			var book = $(this);
+
+			$('#slider').slider('value', getViewNumber(book, page));
+
+			if (page!=1 && page!=book.turn('pages'))
+				$('.sample-docs .tabs').fadeIn(500);
+			else
+				$('.sample-docs .tabs').hide();
+
+			book.turn('center');
+			updateTabs();
+
+		},
+
+		start: function(e, pageObj) {
+	
+			moveBar(true);
+
+		},
+
+		end: function(e, pageObj) {
+		
+			var book = $(this);
+
+			setTimeout(function() {
+				$('#slider').slider('value', getViewNumber(book));
+			}, 1);
+
+			moveBar(false);
+
+		},
+
+		missing: function (e, pages) {
+
+			for (var i = 0; i < pages.length; i++)
+				addPage(pages[i], $(this));
+
+		}
+	}
+	}). turn('page', 2);
+
+
+	$('#slider').slider('option', 'max', numberOfViews(flipbook));
+
+	flipbook.addClass('animated');
+
+
+	// Show canvas
+
+	$('#canvas').css({visibility: 'visible'});
+}
+
+// Hide canvas
+
+$('#canvas').css({visibility: 'hidden'});
+
+yepnope({
+	test: Modernizr.csstransforms,
+	yep: ['../../lib/turn.min.js', 'css/jquery.ui.css'],
+	nope: ['../../lib/turn.html4.min.js', 'css/jquery.ui.html4.css'],
+	both: ['css/docs.css', 'js/docs.js'],
+	complete: loadApp
+});
+</script>
+
+</body>
 </html>
