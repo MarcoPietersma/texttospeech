@@ -318,9 +318,11 @@
         var authToken = await FetchToken();
 
         //load text file
-
-        var pageNum = location.href.substr(location.href.lastIndexOf("/"), 10);
-        var text = LoadTextFile();
+        var pageNum = location.href.substr(
+          location.href.lastIndexOf("/") + 1,
+          10
+        );
+        var text = await makeRequest("GET", `/SpeechBlocks/${pageNum}.txt`);
 
         await TextToSpeech(authToken, text);
       }

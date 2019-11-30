@@ -38,16 +38,18 @@ async function FetchToken() {
 }
 
 async function TextToSpeech(token, text) {
-  var language = "nl-NL-HannaRUS";
+  var language = "nl-NL";
+  var voiceCode = "nl-NL-HannaRUS";
   var audioCtx = context;
 
   context.resume().then(() => {
     console.log("Playback resumed successfully");
   });
 
+  //https://docs.microsoft.com/nl-nl/azure/cognitive-services/speech-service/language-support
   var ssmlRequest = `
-  <speak version='1.0' xml:lang='en-US'>
-  <voice xml:lang='en-US' xml:gender='Female' name='en-US-JessaRUS'>
+  <speak version='1.0' xml:lang='${language}'>
+  <voice xml:lang='${language}' xml:gender='Female' name='${voiceCode}'>
           ${text}
   </voice>
   </speak>`;
@@ -92,4 +94,28 @@ async function TextToSpeech(token, text) {
   };
 
   request.send(ssmlRequest);
+}
+
+function makeRequest(method, url) {
+  return new Promise(function(resolve, reject) {
+    let xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    xhr.onload = function() {
+      if (this.status >= 200 && this.status < 300) {
+        resolve(xhr.response);
+      } else {
+        reject({
+          status: this.status,
+          statusText: xhr.statusText
+        });
+      }
+    };
+    xhr.onerror = function() {
+      reject({
+        status: this.status,
+        statusText: xhr.statusText
+      });
+    };
+    xhr.send();
+  });
 }
